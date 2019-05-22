@@ -48,8 +48,9 @@ def valid(datacfg, cfgfile, weightfile, outfile):
     nms_thresh = 0.45
     for batch_idx, (data, target) in enumerate(valid_loader):
         data = data.cuda()
-        data = Variable(data, volatile = True)
-        output = m(data).data
+        data = Variable(data)
+        with torch.no_grad():
+            output = m(data).data
         batch_boxes = get_region_boxes(output, conf_thresh, m.num_classes, m.anchors, m.num_anchors, 0, 1)
         for i in range(output.size(0)):
             lineId = lineId + 1

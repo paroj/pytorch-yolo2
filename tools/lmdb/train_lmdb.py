@@ -125,8 +125,9 @@ def test(epoch):
     for batch_idx, (data, target) in enumerate(test_loader):
         if use_cuda:
             data = data.cuda()
-        data = Variable(data, volatile=True)
-        output = model(data).data
+        data = Variable(data)
+        with torch.no_grad():
+            output = model(data).data
         all_boxes = get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors)
         if output.size(0) == 1:
             all_boxes = [all_boxes]
