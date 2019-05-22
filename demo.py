@@ -21,6 +21,8 @@ def demo(cfgfile, weightfile):
         m.cuda()
 
     cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     if not cap.isOpened():
         print("Unable to open camera")
         exit(-1)
