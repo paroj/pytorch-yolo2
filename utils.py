@@ -194,7 +194,7 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
 
 def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
     import cv2
-    colors = torch.FloatTensor([[1,0,1],[0,0,1],[0,1,1],[0,1,0],[1,1,0],[1,0,0]]);
+    colors = torch.FloatTensor([[1,0,1],[1,0,0],[1,1,0],[0,1,0],[0,1,1],[0,0,1]])
     def get_color(c, x, max_val):
         ratio = float(x)/max_val * 5
         i = int(math.floor(ratio))
@@ -227,8 +227,11 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
             blue  = get_color(0, offset, classes)
             if color is None:
                 rgb = (red, green, blue)
-            img = cv2.putText(img, class_names[cls_id], (x1,y1), cv2.FONT_HERSHEY_SIMPLEX, 1.2, rgb, 1)
-        img = cv2.rectangle(img, (x1,y1), (x2,y2), rgb, 1)
+            
+            sz = cv2.getTextSize(class_names[cls_id], cv2.FONT_HERSHEY_SIMPLEX, 1, 1)[0]
+            img = cv2.rectangle(img, (x1,y1), (x1 + sz[0],y1 + int(sz[1]*1.5)), rgb, -1)
+            img = cv2.putText(img, class_names[cls_id], (x1,y1 + sz[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 1)
+        img = cv2.rectangle(img, (x1,y1), (x2,y2), rgb, int(width * .006))
     if savename:
         print("save plot results to %s" % savename)
         cv2.imwrite(savename, img)
