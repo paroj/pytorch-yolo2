@@ -207,10 +207,10 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
     height = img.shape[0]
     for i in range(len(boxes)):
         box = boxes[i]
-        x1 = int(round((box[0] - box[2]/2.0) * width))
-        y1 = int(round((box[1] - box[3]/2.0) * height))
-        x2 = int(round((box[0] + box[2]/2.0) * width))
-        y2 = int(round((box[1] + box[3]/2.0) * height))
+        x1 = int(round(float(box[0] - box[2]/2.0) * width))
+        y1 = int(round(float(box[1] - box[3]/2.0) * height))
+        x2 = int(round(float(box[0] + box[2]/2.0) * width))
+        y2 = int(round(float(box[1] + box[3]/2.0) * height))
 
         if color:
             rgb = color
@@ -277,7 +277,7 @@ def read_truths(lab_path):
         return np.array([])
     if os.path.getsize(lab_path):
         truths = np.loadtxt(lab_path)
-        truths = truths.reshape(truths.size/5, 5) # to avoid single truth problem
+        truths = truths.reshape(truths.size//5, 5) # to avoid single truth problem
         return truths
     else:
         return np.array([])
@@ -393,7 +393,7 @@ def file_lines(thefilepath):
         buffer = thefile.read(8192*1024)
         if not buffer:
             break
-        count += buffer.count('\n')
+        count += buffer.count(b'\n')
     thefile.close( )
     return count
 
