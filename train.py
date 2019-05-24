@@ -90,7 +90,7 @@ test_loader = torch.utils.data.DataLoader(
                    shuffle=False,
                    transform=transforms.Compose([
                        transforms.ToTensor(),
-                   ]), train=False),
+                   ]), train=True),
     batch_size=batch_size, shuffle=False, **kwargs)
 
 if use_cuda:
