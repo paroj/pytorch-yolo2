@@ -216,6 +216,8 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
             rgb = color
         else:
             rgb = (255, 0, 0)
+
+        cls_id = -1
         if len(box) >= 7 and class_names:
             cls_conf = box[5]
             cls_id = box[6]
@@ -227,11 +229,14 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
             blue  = get_color(0, offset, classes)
             if color is None:
                 rgb = (red, green, blue)
-            
+        
+        img = cv2.rectangle(img, (x1,y1), (x2,y2), rgb, int(width * .006))
+        
+        if cls_id >= 0:
             sz = cv2.getTextSize(class_names[cls_id], cv2.FONT_HERSHEY_SIMPLEX, 1, 1)[0]
             img = cv2.rectangle(img, (x1,y1), (x1 + sz[0],y1 + int(sz[1]*1.5)), rgb, -1)
             img = cv2.putText(img, class_names[cls_id], (x1,y1 + sz[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 1)
-        img = cv2.rectangle(img, (x1,y1), (x2,y2), rgb, int(width * .006))
+
     if savename:
         print("save plot results to %s" % savename)
         cv2.imwrite(savename, img)
