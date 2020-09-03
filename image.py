@@ -2,35 +2,18 @@
 # encoding: utf-8
 import random
 import os
-from PIL import Image
 import numpy as np
 
-
-def scale_image_channel(im, c, v):
-    cs = list(im.split())
-    cs[c] = cs[c].point(lambda i: i * v)
-    out = Image.merge(im.mode, tuple(cs))
-    return out
+import cv2
 
 def distort_image(im, hue, sat, val):
-    im = im.convert('HSV')
-    cs = list(im.split())
-    cs[1] = cs[1].point(lambda i: i * sat)
-    cs[2] = cs[2].point(lambda i: i * val)
-    
-    def change_hue(x):
-        x += hue*255
-        if x > 255:
-            x -= 255
-        if x < 0:
-            x += 255
-        return x
-    cs[0] = cs[0].point(change_hue)
-    im = Image.merge(im.mode, tuple(cs))
+    im = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2HSV_FULL)
 
-    im = im.convert('RGB')
-    #constrain_image(im)
-    return im
+    im[:, :, 0] = ((im[:, :, 0] + hue * 255) % 255).astype(np.uint8)
+    im[:, :, 1] = np.clip(im[:, :, 1] * sat, 0, 255).astype(np.uint8)
+    im[:, :, 2] = np.clip(im[:, :, 2] * val, 0, 255).astype(np.uint8)
+
+    return cv2.cvtColor(im, cv2.COLOR_HSV2RGB_FULL)
 
 def rand_scale(s):
     scale = random.uniform(1, s)
@@ -42,12 +25,11 @@ def random_distort_image(im, hue, saturation, exposure):
     dhue = random.uniform(-hue, hue)
     dsat = rand_scale(saturation)
     dexp = rand_scale(exposure)
-    res = distort_image(im, dhue, dsat, dexp)
-    return res
+    return distort_image(im, dhue, dsat, dexp)
 
 def data_augmentation(img, shape, jitter, hue, saturation, exposure):
-    oh = img.height  
-    ow = img.width
+    oh = img.shape[0]  
+    ow = img.shape[1]
     
     dw =int(ow*jitter)
     dh =int(oh*jitter)
@@ -64,15 +46,16 @@ def data_augmentation(img, shape, jitter, hue, saturation, exposure):
     sy = float(sheight) / oh
     
     flip = random.randint(1,10000)%2
-    cropped = img.crop( (pleft, ptop, pleft + swidth - 1, ptop + sheight - 1))
+    pad = cv2.copyMakeBorder(img, dh, dh, dw, dw, cv2.BORDER_CONSTANT)
+    cropped = pad[dh+ptop:dh+ptop + sheight - 1,dw+pleft:dw+pleft + swidth - 1,:]
 
     dx = (float(pleft)/ow)/sx
     dy = (float(ptop) /oh)/sy
 
-    sized = cropped.resize(shape)
+    sized = cv2.resize(np.array(cropped), shape, interpolation=cv2.INTER_LINEAR)
 
     if flip: 
-        sized = sized.transpose(Image.FLIP_LEFT_RIGHT)
+        sized = cv2.flip(sized, 1)
     img = random_distort_image(sized, hue, saturation, exposure)
     
     return img, flip, dx,dy,sx,sy 
@@ -119,7 +102,7 @@ def load_data_detection(imgpath, shape, jitter, hue, saturation, exposure):
     labpath = imgpath.replace('images', 'labels').replace('JPEGImages', 'labels').replace('.jpg', '.txt').replace('.png','.txt')
 
     ## data augmentation
-    img = Image.open(imgpath).convert('RGB')
+    img = cv2.imread(imgpath.replace('.jpg', '.png'), cv2.IMREAD_UNCHANGED)
     img,flip,dx,dy,sx,sy = data_augmentation(img, shape, jitter, hue, saturation, exposure)
-    label = fill_truth_detection(labpath, img.width, img.height, flip, dx, dy, 1./sx, 1./sy)
+    label = fill_truth_detection(labpath, img.shape[1], img.shape[0], flip, dx, dy, 1./sx, 1./sy)
     return img,label
